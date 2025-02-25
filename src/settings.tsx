@@ -1,49 +1,59 @@
+import { Button, FormRow, TextInput } from "@vendetta/ui/components";
+import { useState } from "react";
 import { storage } from "@vendetta/plugin";
-import { useProxy } from "@vendetta/storage";
-import { Forms, General } from "@vendetta/ui/components";
-import { encryptToken } from "./encryption";
-import { showToast } from "@vendetta/ui/toasts";
+import { encryptToken } from "./encryption"; // Assume encryptToken is implemented in the encryption file
 
-const { FormSection, FormRow, FormInput, FormButton } = Forms;
-const { useState } = General.React;
+const SettingsPage = () => {
+  const [accountName, setAccountName] = useState("");
+  const [accountToken, setAccountToken] = useState("");
 
-export default function SettingsPage() {
-  useProxy(storage);
+  const handleAddAccount = () => {
+    if (accountName && accountToken) {
+      // Encrypt the token before storing it in the plugin storage
+      const encryptedToken = encryptToken(accountToken);
 
-  const [newAccountName, setNewAccountName] = useState("");
-  const [newToken, setNewToken] = useState("");
+      // Save to storage
+      storage.accounts = {
+        ...storage.accounts,
+        [accountName]: encryptedToken,
+      };
 
-  const addAccount = () => {
-    if (!newAccountName || !newToken) return;
+      alert(`Account "${accountName}" added successfully!`);
 
-    storage.accounts[newAccountName] = encryptToken(newToken);
-    showToast(`Added account: ${newAccountName}`);
-    setNewAccountName("");
-    setNewToken("");
+      // Clear input fields
+      setAccountName("");
+      setAccountToken("");
+    } else {
+      alert("Please fill out both fields.");
+    }
   };
 
   return (
-    <FormSection title="Account Switcher">
-      {Object.keys(storage.accounts).map((account) => (
-        <FormRow
-          label={account}
-          subLabel="Tap to copy token"
-          onPress={() => Clipboard.setString(storage.accounts[account])}
+    <div>
+      <h2>Manage Accounts</h2>
+      
+      <FormRow label="Account Name">
+        <TextInput
+          value={accountName}
+          onChange={(e) => setAccountName(e.target.value)}
+          placeholder="Enter Account Name"
         />
-      ))}
+      </FormRow>
+      
+      <FormRow label="Account Token">
+        <TextInput
+          value={accountToken}
+          onChange={(e) => setAccountToken(e.target.value)}
+          placeholder="Enter Account Token"
+        />
+      </FormRow>
 
-      <FormInput
-        placeholder="Account Name"
-        value={newAccountName}
-        onChangeText={setNewAccountName}
+      <Button
+        text="Add Account"
+        onPress={handleAddAccount}
       />
-      <FormInput
-        placeholder="Discord Token"
-        value={newToken}
-        onChangeText={setNewToken}
-      />
-
-      <FormButton text="Add Account" onPress={addAccount} />
-    </FormSection>
+    </div>
   );
-}
+};
+
+export default SettingsPage;
