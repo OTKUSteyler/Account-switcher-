@@ -1,43 +1,56 @@
+// account-switcher.ts
 import { storage } from "@vendetta/plugin";
 import { registerSettings } from "@vendetta/settings";
-import SettingsPage from "./settings"; // Your Settings Page Component
+import SettingsPage from "./settings";
 import { Clipboard } from "@vendetta/ui/native";
-import { encryptToken, decryptToken } from "./encryption"; // Your encryption/decryption utilities
+import { encryptToken, decryptToken } from "./encryption";
 
-// Default storage setup: Make sure accounts are stored in an object format
+// Default storage setup
 storage.accounts = storage.accounts ?? {};
 
-// Function to switch accounts (decrypt and copy token)
+// Function to switch accounts
 const switchAccount = (accountId: string) => {
-  if (!storage.accounts[accountId]) {
-    console.error(`[AccountSwitcher] Account ${accountId} does not exist in storage.`);
+  if (!storage.accounts[accountId]) return;
+
+  // Decrypt the token for the account
+  const token = decryptToken(storage.accounts[accountId]);
+  
+  if (!token) {
+    console.error("Failed to decrypt token for account:", accountId);
     return;
   }
 
-  // Decrypt the token before copying to clipboard
-  const encryptedToken = storage.accounts[accountId];
-  const decryptedToken = decryptToken(encryptedToken);
+  // Use the token to log the user in
+  loginWithToken(token).then(() => {
+    console.log(`[AccountSwitcher] Switched to account ${accountId} and logged in!`);
+  }).catch((error) => {
+    console.error(`[AccountSwitcher] Error logging in with token for ${accountId}:`, error);
+  });
 
-  if (!decryptedToken) {
-    console.error(`[AccountSwitcher] Failed to decrypt token for account ${accountId}`);
-    return;
-  }
-
-  // Copy the decrypted token to clipboard
-  Clipboard.setString(decryptedToken);
-
-  console.log(`[AccountSwitcher] Copied token for ${accountId}`);
-
-  // Optionally, show a toast or alert
-  alert(`Token for ${accountId} copied! Please log out and paste the new token.`);
+  // Optionally, show a toast message or notification
+  alert(`Switched to ${accountId}. You are now logged in.`);
 };
 
-// Register the settings page to allow users to configure the plugin
+// Function to login with a given token (simulated login)
+const loginWithToken = async (token: string) => {
+  // Simulate a login process (this will depend on your plugin's capabilities)
+  // For now, we will assume you are directly copying the token to the clipboard
+  Clipboard.setString(token);
+};
+
+// Function to add account with token (for adding accounts to local storage)
+const addAccount = (accountId: string, token: string) => {
+  encryptToken(token).then((encryptedToken) => {
+    storage.accounts[accountId] = encryptedToken;
+    alert(`Account ${accountId} added successfully!`);
+  }).catch(() => {
+    alert("Failed to encrypt the token.");
+  });
+};
+
+// Register settings page for adding accounts
 export const onLoad = () => {
-  // Registers the settings page for managing accounts
   registerSettings("account-switcher-settings", SettingsPage);
 };
 
-export const onUnload = () => {
-  // Cleanup if needed when the plugin is unloaded (empty for now)
-};
+export const onUnload = () => {};
