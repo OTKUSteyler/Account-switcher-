@@ -1,28 +1,17 @@
-import { Button, FormRow, TextInput } from "@vendetta/ui/components";
+// settings.tsx
 import { useState } from "react";
-import { storage } from "@vendetta/plugin";
-import { encryptToken } from "./encryption"; // Assume encryptToken is implemented in the encryption file
+import { Button, FormRow, TextInput } from "@vendetta/ui/components";
+import { addAccount } from "./account-switcher"; // Function from account-switcher.ts
 
 const SettingsPage = () => {
-  const [accountName, setAccountName] = useState("");
+  const [accountId, setAccountId] = useState("");
   const [accountToken, setAccountToken] = useState("");
 
   const handleAddAccount = () => {
-    if (accountName && accountToken) {
-      // Encrypt the token before storing it in the plugin storage
-      const encryptedToken = encryptToken(accountToken);
-
-      // Save to storage
-      storage.accounts = {
-        ...storage.accounts,
-        [accountName]: encryptedToken,
-      };
-
-      alert(`Account "${accountName}" added successfully!`);
-
-      // Clear input fields
-      setAccountName("");
-      setAccountToken("");
+    if (accountId && accountToken) {
+      addAccount(accountId, accountToken);
+      setAccountId(""); // Clear the input field
+      setAccountToken(""); // Clear the input field
     } else {
       alert("Please fill out both fields.");
     }
@@ -30,16 +19,14 @@ const SettingsPage = () => {
 
   return (
     <div>
-      <h2>Manage Accounts</h2>
-      
-      <FormRow label="Account Name">
+      <h2>Add Account</h2>
+      <FormRow label="Account ID">
         <TextInput
-          value={accountName}
-          onChange={(e) => setAccountName(e.target.value)}
-          placeholder="Enter Account Name"
+          value={accountId}
+          onChange={(e) => setAccountId(e.target.value)}
+          placeholder="Enter Account ID"
         />
       </FormRow>
-      
       <FormRow label="Account Token">
         <TextInput
           value={accountToken}
@@ -47,11 +34,7 @@ const SettingsPage = () => {
           placeholder="Enter Account Token"
         />
       </FormRow>
-
-      <Button
-        text="Add Account"
-        onPress={handleAddAccount}
-      />
+      <Button text="Add Account" onPress={handleAddAccount} />
     </div>
   );
 };
